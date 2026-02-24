@@ -30,6 +30,7 @@ class Model(Retriever):
             
 if __name__ == '__main__':
     resd = Model()
+
     while True:
         user = input("input :")
         for res in resd.query(user):
