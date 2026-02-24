@@ -1,10 +1,9 @@
 from langchain_core.prompts import ChatPromptTemplate
-from langchain_core.messages import HumanMessage,SystemMessage
 from langchain_huggingface import HuggingFaceEndpoint,ChatHuggingFace
-from langchain_core.runnables import RunnableLambda
 from Retriver import  Retriever
+from langchain_core.output_parsers import StrOutputParser
 
-class model(Retriever):
+class Model(Retriever):
 
     def __init__(self):
         super().__init__()
@@ -19,19 +18,22 @@ class model(Retriever):
         self.llm = ChatHuggingFace(llm = model)
     def query(self,question):
         context = self.ret(question)
-        self.prompt = ChatPromptTemplate.from_messages([
+        prompt = ChatPromptTemplate.from_messages([
             ("system","""Use the information from the document to answer the question. If you don't know, say you don't know. Do NOT make up an answer.
             Context:
             {context}
             """),
             ("user","Question:{question}")])
-        return self.prompt
+        chain = prompt | self.llm | StrOutputParser()
+        for chunk in chain.stream({"context":context,"question":question}):
+            yield chunk
+            
 if __name__ == '__main__':
-    resd = model()
+    resd = Model()
     while True:
         user = input("input :")
-        print(resd.query(user))
-    
+        for res in resd.query(user):
+            print(res,end="")    
         
         
         
